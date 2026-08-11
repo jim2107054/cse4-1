@@ -1,11 +1,3 @@
-"""
-CSE 4102 - Lab 02 - Homework (A2, B2)
-Histogram Matching: Equalize an RGB image by matching only the L channel
-(in Lab color space) to the L-channel histogram of a reference image.
-
-Author: <your name>
-"""
-
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
