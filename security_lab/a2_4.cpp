@@ -1,58 +1,46 @@
-#include <bits/stdc++.h>
+#include <iostream>
 using namespace std;
 
-using int64 = long long;
 
-
-// Custom modulo
-int64 mymod(int64 a, int64 m)
+// ======================================================
+// CUSTOM MOD
+// Handles both positive and negative values
+// ======================================================
+long long mymod(long long a, long long b)
 {
-    int64 r = a % m;
+    long long r = a - (a / b) * b;
 
     if (r < 0)
-        r += m;
+        r = r + b;
 
     return r;
 }
 
 
-// Custom GCD
-int64 mygcd(int64 a, int64 b)
+// ======================================================
+// CUSTOM GCD
+// ======================================================
+long long mygcd(long long a, long long b)
 {
-    while (b != 0)
+    if (a < b)
     {
-        int64 temp = b;
-        b = a % b;
-        a = temp;
+        long long temp = a;
+        a = b;
+        b = temp;
     }
 
-    return a;
+    if (b == 0)
+        return a;
+
+    return mygcd(b, mymod(a, b));
 }
 
 
-// Custom Modular Exponentiation
-int64 mymodpow(int64 a, int64 e, int64 m)
-{
-    int64 result = 1;
-
-    a = mymod(a, m);
-
-    while (e > 0)
-    {
-        if (e % 2 == 1)
-            result = (result * a) % m;
-
-        a = (a * a) % m;
-
-        e = e / 2;
-    }
-
-    return result;
-}
-
-
-// Extended Euclidean Algorithm
-int64 myegcd(int64 a, int64 b, int64 &x, int64 &y)
+// ======================================================
+// EXTENDED GCD
+// ======================================================
+long long extendedGCD(long long a, long long b,
+                      long long &x, long long &y)
 {
     if (b == 0)
     {
@@ -62,122 +50,190 @@ int64 myegcd(int64 a, int64 b, int64 &x, int64 &y)
         return a;
     }
 
-    int64 x1, y1;
+    long long x1, y1;
 
-    int64 g = myegcd(b, a % b, x1, y1);
+    long long g =
+        extendedGCD(b, mymod(a, b), x1, y1);
 
     x = y1;
+
     y = x1 - (a / b) * y1;
 
     return g;
 }
 
 
-// Modular Inverse
-int64 mymodinv(int64 a, int64 m)
+// ======================================================
+// MODULAR INVERSE
+// ======================================================
+long long ModularInverse(long long e, long long phi)
 {
-    int64 x, y;
+    long long x, y;
 
-    int64 g = myegcd(a, m, x, y);
+    long long g =
+        extendedGCD(e, phi, x, y);
 
     if (g != 1)
         return -1;
 
-    return mymod(x, m);
+    x = mymod(x, phi);
+
+    if (x < 0)
+        x = x + phi;
+
+    return x;
 }
 
 
-// --------------------------------------------------
-// ElGamal Encryption
-// --------------------------------------------------
-void encrypt(
-    int64 M,
-    int64 k,
-    int64 p,
-    int64 alpha,
-    int64 beta,
-    int64 &c1,
-    int64 &c2)
+// ======================================================
+// MODULAR POWER
+// Calculates (base^power) mod n
+// ======================================================
+long long modPower(long long base,
+                   long long power,
+                   long long n)
+{
+    long long result = 1;
+
+    base = mymod(base, n);
+
+    while (power > 0)
+    {
+        // Check whether power is odd
+        if (mymod(power, 2) == 1)
+        {
+            result = mymod(result * base, n);
+        }
+
+        base = mymod(base * base, n);
+
+        power = power / 2;
+    }
+
+    return result;
+}
+
+
+// ======================================================
+// ELGAMAL ENCRYPTION
+// c1 = alpha^k mod p
+// c2 = M * beta^k mod p
+// ======================================================
+void encrypt(long long M,
+             long long k,
+             long long p,
+             long long alpha,
+             long long beta,
+             long long &c1,
+             long long &c2)
 {
     // c1 = alpha^k mod p
-    c1 = mymodpow(alpha, k, p);
+    c1 = modPower(alpha, k, p);
+
+    // beta^k mod p
+    long long temp =
+        modPower(beta, k, p);
 
     // c2 = M * beta^k mod p
-    c2 = (M * mymodpow(beta, k, p)) % p;
+    c2 = mymod(M * temp, p);
 }
 
 
-// --------------------------------------------------
-// ElGamal Decryption
-// --------------------------------------------------
-int64 decrypt(
-    int64 c1,
-    int64 c2,
-    int64 p,
-    int64 a)
+// ======================================================
+// ELGAMAL DECRYPTION
+// M = c2 * (c1^a)^(-1) mod p
+// ======================================================
+long long decrypt(long long c1,
+                  long long c2,
+                  long long p,
+                  long long a)
 {
     // s = c1^a mod p
-    int64 s = mymodpow(c1, a, p);
+    long long s =
+        modPower(c1, a, p);
 
-    // s^-1 mod p
-    int64 s_inv = mymodinv(s, p);
+    // s^(-1) mod p
+    long long s_inv =
+        ModularInverse(s, p);
 
-    // M = c2 * s^-1 mod p
-    return (c2 * s_inv) % p;
+    // M = c2 * s^(-1) mod p
+    return mymod(c2 * s_inv, p);
 }
 
 
+// ======================================================
+// MAIN
+// ======================================================
 int main()
 {
     // ==================================================
     // KEY GENERATION
     // ==================================================
 
-    int64 p = 467;
-    int64 alpha = 2;
-    int64 a = 127;
+    long long p = 467;
+
+    // Primitive Root / Generator
+    long long alpha = 2;
+
+    // Private Key
+    long long a = 127;
 
     // beta = alpha^a mod p
-    int64 beta = mymodpow(alpha, a, p);
+    long long beta =
+        modPower(alpha, a, p);
 
 
-    cout << "====================================\n";
-    cout << "   ELGAMAL MULTIPLICATIVE HOMOMORPHISM\n";
-    cout << "====================================\n\n";
+    cout << "========================================\n";
+    cout << "       ELGAMAL CRYPTOSYSTEM\n";
+    cout << "========================================\n";
 
 
-    cout << "Public Key = ("
+    cout << "\nKey Generation\n";
+    cout << "---------------\n";
+
+    cout << "p     = " << p << endl;
+    cout << "alpha = " << alpha << endl;
+    cout << "a     = " << a << " (Private Key)" << endl;
+    cout << "beta  = " << beta << endl;
+
+
+    cout << "\nPublic Key = ("
          << p << ", "
          << alpha << ", "
-         << beta << ")\n";
+         << beta << ")" << endl;
 
     cout << "Private Key = "
-         << a << "\n";
+         << a << endl;
 
 
     // ==================================================
     // TWO MESSAGES
     // ==================================================
 
-    int64 M1 = 10;
-    int64 M2 = 20;
+    long long M1 = 10;
+    long long M2 = 20;
 
-    int64 k1 = 5;
-    int64 k2 = 7;
+    // Random encryption values
+    long long k1 = 5;
+    long long k2 = 7;
 
 
-    cout << "\nMessage 1 = " << M1;
-    cout << "\nRandom k1 = " << k1;
+    cout << "\n========================================\n";
+    cout << "             MESSAGES\n";
+    cout << "========================================\n";
 
-    cout << "\n\nMessage 2 = " << M2;
-    cout << "\nRandom k2 = " << k2;
+    cout << "M1 = " << M1 << endl;
+    cout << "k1 = " << k1 << endl;
+
+    cout << "\nM2 = " << M2 << endl;
+    cout << "k2 = " << k2 << endl;
 
 
     // ==================================================
-    // ENCRYPT M1
+    // ENCRYPT MESSAGE 1
     // ==================================================
 
-    int64 c11, c12;
+    long long c11, c12;
 
     encrypt(
         M1,
@@ -190,16 +246,20 @@ int main()
     );
 
 
-    cout << "\n\nCiphertext 1 = ("
+    cout << "\n========================================\n";
+    cout << "             ENCRYPTION\n";
+    cout << "========================================\n";
+
+    cout << "Ciphertext 1 = ("
          << c11 << ", "
-         << c12 << ")";
+         << c12 << ")" << endl;
 
 
     // ==================================================
-    // ENCRYPT M2
+    // ENCRYPT MESSAGE 2
     // ==================================================
 
-    int64 c21, c22;
+    long long c21, c22;
 
     encrypt(
         M2,
@@ -212,39 +272,39 @@ int main()
     );
 
 
-    cout << "\nCiphertext 2 = ("
+    cout << "Ciphertext 2 = ("
          << c21 << ", "
-         << c22 << ")";
+         << c22 << ")" << endl;
 
 
     // ==================================================
     // HOMOMORPHIC MULTIPLICATION
     // ==================================================
 
-    // Multiply first components
-    int64 combined_c1 =
-        (c11 * c21) % p;
+    // Combined c1
+    long long combined_c1 =
+        mymod(c11 * c21, p);
 
-    // Multiply second components
-    int64 combined_c2 =
-        (c12 * c22) % p;
+    // Combined c2
+    long long combined_c2 =
+        mymod(c12 * c22, p);
 
 
-    cout << "\n\n====================================\n";
-    cout << "HOMOMORPHIC MULTIPLICATION\n";
-    cout << "====================================\n";
+    cout << "\n========================================\n";
+    cout << "     HOMOMORPHIC MULTIPLICATION\n";
+    cout << "========================================\n";
 
 
     cout << "\nCombined Ciphertext = ("
          << combined_c1 << ", "
-         << combined_c2 << ")";
+         << combined_c2 << ")" << endl;
 
 
     // ==================================================
     // DECRYPT COMBINED CIPHERTEXT
     // ==================================================
 
-    int64 result =
+    long long result =
         decrypt(
             combined_c1,
             combined_c2,
@@ -253,34 +313,39 @@ int main()
         );
 
 
-    cout << "\n\nDecrypted Result = "
-         << result;
+    cout << "\nDecrypted Result = "
+         << result << endl;
 
 
     // Expected result
-    int64 expected =
-        (M1 * M2) % p;
+    long long expected =
+        mymod(M1 * M2, p);
 
 
-    cout << "\nExpected M1 * M2 mod p = "
-         << expected;
+    cout << "Expected M1 * M2 mod p = "
+         << expected << endl;
 
 
     // ==================================================
-    // VERIFY
+    // VERIFY HOMOMORPHIC PROPERTY
     // ==================================================
+
+    cout << "\n========================================\n";
+    cout << "              VERIFICATION\n";
+    cout << "========================================\n";
+
 
     if (result == expected)
     {
-        cout << "\n\nHomomorphic Multiplication SUCCESSFUL";
+        cout << "\nHomomorphic Multiplication SUCCESSFUL"
+             << endl;
     }
     else
     {
-        cout << "\n\nHomomorphic Multiplication FAILED";
+        cout << "\nHomomorphic Multiplication FAILED"
+             << endl;
     }
 
-
-    cout << "\n";
 
     return 0;
 }
