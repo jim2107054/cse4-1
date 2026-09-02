@@ -161,191 +161,72 @@ long long decrypt(long long c1,
 }
 
 
-// ======================================================
-// MAIN
-// ======================================================
 int main()
 {
-    // ==================================================
-    // KEY GENERATION
-    // ==================================================
-
+    // Key Generation
     long long p = 467;
-
-    // Primitive Root / Generator
     long long alpha = 2;
-
-    // Private Key
     long long a = 127;
 
-    // beta = alpha^a mod p
-    long long beta =
-        modPower(alpha, a, p);
+    long long beta = modPower(alpha, a, p);
 
-
-    cout << "========================================\n";
-    cout << "       ELGAMAL CRYPTOSYSTEM\n";
-    cout << "========================================\n";
-
-
-    cout << "\nKey Generation\n";
-    cout << "---------------\n";
-
-    cout << "p     = " << p << endl;
-    cout << "alpha = " << alpha << endl;
-    cout << "a     = " << a << " (Private Key)" << endl;
-    cout << "beta  = " << beta << endl;
-
-
-    cout << "\nPublic Key = ("
-         << p << ", "
-         << alpha << ", "
-         << beta << ")" << endl;
-
-    cout << "Private Key = "
-         << a << endl;
-
-
-    // ==================================================
-    // TWO MESSAGES
-    // ==================================================
-
+    // Messages and random values
     long long M1 = 10;
     long long M2 = 20;
 
-    // Random encryption values
     long long k1 = 5;
     long long k2 = 7;
 
-
-    cout << "\n========================================\n";
-    cout << "             MESSAGES\n";
-    cout << "========================================\n";
-
-    cout << "M1 = " << M1 << endl;
-    cout << "k1 = " << k1 << endl;
-
-    cout << "\nM2 = " << M2 << endl;
-    cout << "k2 = " << k2 << endl;
-
-
-    // ==================================================
-    // ENCRYPT MESSAGE 1
-    // ==================================================
-
+    // Encrypt M1
     long long c11, c12;
 
-    encrypt(
-        M1,
-        k1,
-        p,
-        alpha,
-        beta,
-        c11,
-        c12
-    );
+    encrypt(M1, k1, p, alpha, beta, c11, c12);
 
-
-    cout << "\n========================================\n";
-    cout << "             ENCRYPTION\n";
-    cout << "========================================\n";
-
-    cout << "Ciphertext 1 = ("
-         << c11 << ", "
-         << c12 << ")" << endl;
-
-
-    // ==================================================
-    // ENCRYPT MESSAGE 2
-    // ==================================================
-
+    // Encrypt M2
     long long c21, c22;
 
-    encrypt(
-        M2,
-        k2,
-        p,
-        alpha,
-        beta,
-        c21,
-        c22
-    );
+    encrypt(M2, k2, p, alpha, beta, c21, c22);
 
+    // Homomorphic Multiplication
+    long long combined_c1 = mymod(c11 * c21, p);
+    long long combined_c2 = mymod(c12 * c22, p);
 
-    cout << "Ciphertext 2 = ("
-         << c21 << ", "
-         << c22 << ")" << endl;
-
-
-    // ==================================================
-    // HOMOMORPHIC MULTIPLICATION
-    // ==================================================
-
-    // Combined c1
-    long long combined_c1 =
-        mymod(c11 * c21, p);
-
-    // Combined c2
-    long long combined_c2 =
-        mymod(c12 * c22, p);
-
-
-    cout << "\n========================================\n";
-    cout << "     HOMOMORPHIC MULTIPLICATION\n";
-    cout << "========================================\n";
-
-
-    cout << "\nCombined Ciphertext = ("
-         << combined_c1 << ", "
-         << combined_c2 << ")" << endl;
-
-
-    // ==================================================
-    // DECRYPT COMBINED CIPHERTEXT
-    // ==================================================
-
+    // Decrypt combined ciphertext
     long long result =
-        decrypt(
-            combined_c1,
-            combined_c2,
-            p,
-            a
-        );
-
-
-    cout << "\nDecrypted Result = "
-         << result << endl;
-
+        decrypt(combined_c1, combined_c2, p, a);
 
     // Expected result
     long long expected =
         mymod(M1 * M2, p);
 
+    // Output
+    cout << "Public Key = ("
+         << p << ", "
+         << alpha << ", "
+         << beta << ")\n";
 
-    cout << "Expected M1 * M2 mod p = "
-         << expected << endl;
+    cout << "Ciphertext 1 = ("
+         << c11 << ", "
+         << c12 << ")\n";
 
+    cout << "Ciphertext 2 = ("
+         << c21 << ", "
+         << c22 << ")\n";
 
-    // ==================================================
-    // VERIFY HOMOMORPHIC PROPERTY
-    // ==================================================
+    cout << "Combined Ciphertext = ("
+         << combined_c1 << ", "
+         << combined_c2 << ")\n";
 
-    cout << "\n========================================\n";
-    cout << "              VERIFICATION\n";
-    cout << "========================================\n";
+    cout << "Decrypted Result = "
+         << result << "\n";
 
+    cout << "Expected Result = "
+         << expected << "\n";
 
     if (result == expected)
-    {
-        cout << "\nHomomorphic Multiplication SUCCESSFUL"
-             << endl;
-    }
+        cout << "SUCCESSFUL\n";
     else
-    {
-        cout << "\nHomomorphic Multiplication FAILED"
-             << endl;
-    }
-
+        cout << "FAILED\n";
 
     return 0;
 }
