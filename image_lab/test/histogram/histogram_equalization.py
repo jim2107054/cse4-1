@@ -1,9 +1,10 @@
+
 from numpy import int64
 import cv2
 import numpy as np 
 import matplotlib.pyplot as plt 
 
-img = cv2.imread('input.jpeg', cv2.IMREAD_GRAYSCALE)
+img = cv2.imread(r'Y:\4-1\cse4-1\image_lab\test\input.jpeg', cv2.IMREAD_GRAYSCALE)
 
 #Image Dimensions
 row,col = img.shape
@@ -38,16 +39,25 @@ for i in range(row):
     for j in range(col):
         equalized[i,j] = mapping[img[i,j]]
 
-plt.figure(figsize=(12, 8))
+plt.figure(figsize=(12, 6))
 
 plt.subplot(2, 2, 1)
 plt.imshow(img, cmap="gray")
 plt.title("Original")
 plt.axis("off")
 
-plt.subplot(2, 2, 2)
-plt.imshow(equalized, cmap="gray")
+plt.subplot(2,2,2)
+plt.plot(pdf,'r')
+plt.title("PDF")
+
+plt.subplot(2,2,3)
+plt.plot(cdf,'b')
+plt.title("CDF")
+
+plt.subplot(2, 2, 4)
+plt.imshow(equalized,cmap="gray")
 plt.title("Equalized")
 plt.axis("off")
+
 
 plt.show()
