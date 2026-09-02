@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt 
 
-img = cv2.imread("input.jpeg")
+img = cv2.imread(r"image_lab/test/input.jpeg")
 
 #BGR format e thake
 channels = cv2.split(img)
