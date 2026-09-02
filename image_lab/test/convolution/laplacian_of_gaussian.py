@@ -12,7 +12,7 @@ def log_kernel(size,sigma):
             exponent = -(x**2 + y**2)/(2*sigma**2)
             coeff = -1/(np.pi*sigma**4)
             kernel[i,j] = coeff * (1 + exponent) * np.exp(exponent) 
-            kernel-=np.mean(kernel)
+    kernel-=np.mean(kernel)
     return kernel 
 
 def manual_convolution(img, kernel):
@@ -31,7 +31,7 @@ def manual_convolution(img, kernel):
     
     return output
 
-img = cv2.imread("input.jpeg",cv2.IMREAD_GRAYSCALE)
+img = cv2.imread(r"image_lab/test/input.jpeg",cv2.IMREAD_GRAYSCALE)
 kernel = log_kernel(5,1.2)
 output = manual_convolution(img,kernel)
 output=cv2.normalize(output,None,0,255,cv2.NORM_MINMAX)
