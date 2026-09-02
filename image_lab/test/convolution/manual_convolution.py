@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-img = cv2.imread("input.jpeg", cv2.IMREAD_GRAYSCALE)
+img = cv2.imread(r"Y:\4-1\cse4-1\image_lab\test\input.jpeg", cv2.IMREAD_GRAYSCALE)
 
 def gaussian_kernel(size, sigma):
     kernel = np.zeros((size, size))
@@ -30,14 +30,19 @@ def manual_convolution(img, kernel):
     result = np.zeros((rows,cols), dtype=np.float32)
 
     #Flip kernel for conv
-    kernel = np.flip(kernel)
+    # kernel = np.flip(kernel)
+    # Manually flipped kernel
+    flipped_kernel = np.zeros_like(kernel)
+    for i in range(k):
+        for j in range(k):
+            flipped_kernel[i,j] = kernel[k-1-i, k-1-j]
 
     # Sliding window
     for i in range(rows):
         for j in range(cols):
             # Element wise multiplication
             region = img_pad[i:i+k, j:j+k]
-            result[i,j] = np.sum(region * kernel)
+            result[i,j] = np.sum(region * flipped_kernel)
 
     return np.clip(result,0,255).astype(np.uint8)
 
