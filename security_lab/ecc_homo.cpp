@@ -15,24 +15,38 @@ struct Point
 };
 
 
-// =====================================================
-// MOD
-// =====================================================
+// ---------------- MOD ----------------
 
-long long mymod(long long a, long long p)
+long long mymod(long long a, long long b)
 {
-    long long r = a % p;
+    long long r = a - (a / b) * b;
 
     if (r < 0)
-        r = r + p;
+        r = r + b;
 
     return r;
 }
 
 
-// =====================================================
-// EXTENDED GCD
-// =====================================================
+// ---------------- GCD ----------------
+
+long long mygcd(long long a, long long b)
+{
+    if (a < b)
+    {
+        long long temp = a;
+        a = b;
+        b = temp;
+    }
+
+    if (b == 0)
+        return a;
+
+    return mygcd(b, mymod(a, b));
+}
+
+
+// ---------------- Extended GCD ----------------
 
 long long extendedGCD(
     long long a,
@@ -66,23 +80,26 @@ long long extendedGCD(
 }
 
 
-// =====================================================
-// MODULAR INVERSE
-// =====================================================
+// ---------------- Modular Inverse ----------------
 
 long long ModularInverse(
-    long long a,
-    long long p)
+    long long e,
+    long long phi)
 {
     long long x, y;
 
     long long g =
-        extendedGCD(a, p, x, y);
+        extendedGCD(e, phi, x, y);
 
     if (g != 1)
         return -1;
 
-    return mymod(x, p);
+    x = mymod(x, phi);
+
+    if (x < 0)
+        x = x + phi;
+
+    return x;
 }
 
 
