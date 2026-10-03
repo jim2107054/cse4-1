@@ -1,5 +1,4 @@
 #include <iostream>
-#include <vector>
 #include <string>
 #include <cstdlib>
 #include <ctime>
@@ -8,61 +7,43 @@ using namespace std;
 
 const string CHARSET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-// Manual 8-bit binary representation of a character
-string charToBinary(unsigned char c)
+// Convert a string to 8-bit binary string
+string toBinary(string s)
 {
     string bin = "";
-    for (int i = 7; i >= 0; i--)
-        bin += ((c >> i) & 1) ? '1' : '0';
+    for (char c : s)
+    {
+        for (int i = 7; i >= 0; i--)
+            bin += ((c >> i) & 1) ? '1' : '0';
+    }
     return bin;
 }
 
-// Manual binary string to character
-char binaryToChar(const string &bin)
+// Convert 8-bit binary string back to text
+string toText(string bin)
 {
-    unsigned char c = 0;
-    for (char bit : bin)
-        c = (c << 1) | (bit - '0');
-    return static_cast<char>(c);
+    string text = "";
+    for (size_t i = 0; i < bin.length(); i += 8)
+    {
+        char c = 0;
+        for (int j = 0; j < 8; j++)
+            c = (c << 1) | (bin[i + j] - '0');
+        text += c;
+    }
+    return text;
 }
 
-// String to vector of 8-bit binary strings
-vector<string> toBinary(const string &s)
-{
-    vector<string> bin;
-    for (unsigned char c : s)
-        bin.push_back(charToBinary(c));
-    return bin;
-}
-
-// Vector of 8-bit binary strings to string
-string toString(const vector<string> &bin)
-{
-    string s = "";
-    for (const string &b : bin)
-        s += binaryToChar(b);
-    return s;
-}
-
-// Manual XOR for single bits ('0' or '1')
-char manualXor(char a, char b)
-{
-    if ((a == '1' && b == '0') || (a == '0' && b == '1'))
-        return '1';
-    return '0';
-}
-
-// Manual Bitwise XOR of two binary strings
-string xorBits(const string &a, const string &b)
+// Bitwise XOR of two binary strings
+string xorBits(string a, string b)
 {
     string res = "";
     for (size_t i = 0; i < a.length(); i++)
-        res += manualXor(a[i], b[i]);
+        res += (a[i] == b[i]) ? '0' : '1';
     return res;
 }
 
 // Print 2x2 string matrix
-void printMatrix(const string m[2][2])
+void printMatrix(string m[2][2])
 {
     for (int r = 0; r < 2; r++)
     {
@@ -76,7 +57,7 @@ int main()
 {
     srand(time(0));
 
-    // 0. Initial Matrix
+    // 0. Initial Plaintext Matrix
     string pt[2][2] = {
         {"CSE",  "21"},
         {"KUET", "Khulna"}
@@ -84,30 +65,29 @@ int main()
     cout << "Original Matrix:\n";
     printMatrix(pt);
 
-    // 1. Transpose
-    string transposed[2][2];
+    // 1. Matrix Transpose
+    string trans[2][2];
     for (int r = 0; r < 2; r++)
         for (int c = 0; c < 2; c++)
-            transposed[c][r] = pt[r][c];
+            trans[c][r] = pt[r][c];
 
     cout << "\nTransposed Matrix:\n";
-    printMatrix(transposed);
+    printMatrix(trans);
 
-    // 2. String to Binary
-    vector<string> ptBin[2][2];
+    // 2. String to Binary Matrix
+    string ptBin[2][2];
     for (int r = 0; r < 2; r++)
         for (int c = 0; c < 2; c++)
-            ptBin[r][c] = toBinary(transposed[r][c]);
+            ptBin[r][c] = toBinary(trans[r][c]);
 
-    // 3. Simple Random Key Generation
-    string key[2][2];
-    vector<string> keyBin[2][2];
+    // 3. Random Key Matrix & Binary
+    string key[2][2], keyBin[2][2];
     for (int r = 0; r < 2; r++)
     {
         for (int c = 0; c < 2; c++)
         {
             key[r][c] = "";
-            for (size_t i = 0; i < transposed[r][c].length(); i++)
+            for (size_t i = 0; i < trans[r][c].length(); i++)
                 key[r][c] += CHARSET[rand() % CHARSET.length()];
 
             keyBin[r][c] = toBinary(key[r][c]);
@@ -117,41 +97,28 @@ int main()
     printMatrix(key);
 
     // 4. Encryption (Transposed XOR Key)
-    vector<string> cipherBin[2][2];
+    string cipherBin[2][2];
     cout << "\nCiphertext (Binary):\n";
     for (int r = 0; r < 2; r++)
     {
         for (int c = 0; c < 2; c++)
         {
-            cout << "[" << r << "][" << c << "]: ";
-            for (size_t k = 0; k < ptBin[r][c].size(); k++)
-            {
-                string cBits = xorBits(ptBin[r][c][k], keyBin[r][c][k]);
-                cipherBin[r][c].push_back(cBits);
-                cout << cBits << " ";
-            }
-            cout << "\n";
+            cipherBin[r][c] = xorBits(ptBin[r][c], keyBin[r][c]);
+            cout << "[" << r << "][" << c << "]: " << cipherBin[r][c] << "\n";
         }
     }
 
     // 5. Decryption (Cipher XOR Key)
-    string decTransposed[2][2];
+    string decTrans[2][2];
     for (int r = 0; r < 2; r++)
-    {
         for (int c = 0; c < 2; c++)
-        {
-            vector<string> decBin;
-            for (size_t k = 0; k < cipherBin[r][c].size(); k++)
-                decBin.push_back(xorBits(cipherBin[r][c][k], keyBin[r][c][k]));
-            decTransposed[r][c] = toString(decBin);
-        }
-    }
+            decTrans[r][c] = toText(xorBits(cipherBin[r][c], keyBin[r][c]));
 
     // 6. Inverse Transpose
     string recovered[2][2];
     for (int r = 0; r < 2; r++)
         for (int c = 0; c < 2; c++)
-            recovered[c][r] = decTransposed[r][c];
+            recovered[c][r] = decTrans[r][c];
 
     cout << "\nDecrypted Matrix:\n";
     printMatrix(recovered);
