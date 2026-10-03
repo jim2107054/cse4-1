@@ -1,236 +1,167 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <bitset>
 #include <random>
 #include <ctime>
-#include <iomanip>
 
 using namespace std;
 
-// Alphanumeric character set: {0-9, A-Z, a-z} (62 characters)
-const string ALPHANUMERIC_SET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const string CHARSET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-// ======================================================
-// HELPER FUNCTIONS
-// ======================================================
-
-// Convert a single string into a vector of 8-bit ASCII binary strings (one per character)
-vector<string> stringToBinaryVector(const string &str)
+// Manual 8-bit binary representation of a character
+string charToBinary(unsigned char c)
 {
-    vector<string> binVec;
-    for (unsigned char c : str)
-    {
-        binVec.push_back(bitset<8>(c).to_string());
-    }
-    return binVec;
+    string bin = "";
+    for (int i = 7; i >= 0; i--)
+        bin += ((c >> i) & 1) ? '1' : '0';
+    return bin;
 }
 
-// Convert a vector of 8-bit binary strings back to a string
-string binaryVectorToString(const vector<string> &binVec)
+// Manual binary string to character
+char binaryToChar(const string &bin)
 {
-    string result = "";
-    for (const string &bin : binVec)
-    {
-        unsigned long val = bitset<8>(bin).to_ulong();
-        result += static_cast<char>(val);
-    }
-    return result;
+    unsigned char c = 0;
+    for (char bit : bin)
+        c = (c << 1) | (bit - '0');
+    return static_cast<char>(c);
 }
 
-// Bitwise XOR of two equal-length binary strings ('0' and '1')
-string xorBinaryStrings(const string &bin1, const string &bin2)
+// String to vector of 8-bit binary strings
+vector<string> toBinary(const string &s)
 {
-    string result = "";
-    for (size_t i = 0; i < bin1.length(); i++)
-    {
-        char b1 = bin1[i];
-        char b2 = bin2[i];
-        result += (b1 == b2) ? '0' : '1';
-    }
-    return result;
+    vector<string> bin;
+    for (unsigned char c : s)
+        bin.push_back(charToBinary(c));
+    return bin;
 }
 
-// Generate a random alphanumeric string of a given length
-string generateRandomKeyString(size_t len, mt19937 &rng)
+// Vector of 8-bit binary strings to string
+string toString(const vector<string> &bin)
 {
-    uniform_int_distribution<size_t> dist(0, ALPHANUMERIC_SET.size() - 1);
+    string s = "";
+    for (const string &b : bin)
+        s += binaryToChar(b);
+    return s;
+}
+
+// Manual XOR for single bits ('0' or '1')
+char manualXor(char a, char b)
+{
+    if ((a == '1' && b == '0') || (a == '0' && b == '1'))
+        return '1';
+    return '0';
+}
+
+// Manual Bitwise XOR of two binary strings
+string xorBits(const string &a, const string &b)
+{
+    string res = "";
+    for (size_t i = 0; i < a.length(); i++)
+        res += manualXor(a[i], b[i]);
+    return res;
+}
+
+// Generate random alphanumeric key of given length
+string generateKey(size_t len, mt19937 &rng)
+{
+    uniform_int_distribution<size_t> dist(0, CHARSET.size() - 1);
     string key = "";
     for (size_t i = 0; i < len; i++)
-    {
-        key += ALPHANUMERIC_SET[dist(rng)];
-    }
+        key += CHARSET[dist(rng)];
     return key;
 }
 
-// Print a 2x2 matrix of strings
-void printMatrix(const string matrix[2][2], const string &title)
+// Print 2x2 string matrix
+void printMatrix(const string m[2][2])
 {
-    cout << "\n--- " << title << " ---\n";
-    cout << "+-----------------------+-----------------------+\n";
     for (int r = 0; r < 2; r++)
     {
-        cout << "| ";
-        cout << left << setw(21) << matrix[r][0] << " | ";
-        cout << left << setw(21) << matrix[r][1] << " |\n";
-        cout << "+-----------------------+-----------------------+\n";
+        for (int c = 0; c < 2; c++)
+            cout << m[r][c] << "\t";
+        cout << "\n";
     }
 }
 
-// Print a 2x2 matrix of binary representations
-void printBinaryMatrix(const vector<string> binMatrix[2][2], const string &title)
+int main()
 {
-    cout << "\n--- " << title << " ---\n";
+    mt19937 rng(time(nullptr));
+
+    // 0. Initial Matrix
+    string pt[2][2] = {
+        {"CSE",  "21"},
+        {"KUET", "Khulna"}
+    };
+    cout << "Original Matrix:\n";
+    printMatrix(pt);
+
+    // 1. Transpose
+    string transposed[2][2];
+    for (int r = 0; r < 2; r++)
+        for (int c = 0; c < 2; c++)
+            transposed[c][r] = pt[r][c];
+
+    cout << "\nTransposed Matrix:\n";
+    printMatrix(transposed);
+
+    // 2. String to Binary
+    vector<string> ptBin[2][2];
+    for (int r = 0; r < 2; r++)
+        for (int c = 0; c < 2; c++)
+            ptBin[r][c] = toBinary(transposed[r][c]);
+
+    // 3. Random Key Generation
+    string key[2][2];
+    vector<string> keyBin[2][2];
     for (int r = 0; r < 2; r++)
     {
         for (int c = 0; c < 2; c++)
         {
-            cout << "Cell [" << r << "][" << c << "]: ";
-            for (size_t i = 0; i < binMatrix[r][c].size(); i++)
+            key[r][c] = generateKey(transposed[r][c].length(), rng);
+            keyBin[r][c] = toBinary(key[r][c]);
+        }
+    }
+    cout << "\nKey Matrix:\n";
+    printMatrix(key);
+
+    // 4. Encryption (Transposed XOR Key)
+    vector<string> cipherBin[2][2];
+    cout << "\nCiphertext (Binary):\n";
+    for (int r = 0; r < 2; r++)
+    {
+        for (int c = 0; c < 2; c++)
+        {
+            cout << "[" << r << "][" << c << "]: ";
+            for (size_t k = 0; k < ptBin[r][c].size(); k++)
             {
-                cout << binMatrix[r][c][i] << (i + 1 < binMatrix[r][c].size() ? " " : "");
+                string cBits = xorBits(ptBin[r][c][k], keyBin[r][c][k]);
+                cipherBin[r][c].push_back(cBits);
+                cout << cBits << " ";
             }
             cout << "\n";
         }
     }
-}
 
-// ======================================================
-// MAIN EXECUTION
-// ======================================================
-int main()
-{
-    cout << "====================================================================\n";
-    cout << "   LAB-1: TRANSPOSITIONAL CIPHER SYSTEM (2x2 MATRIX OF STRINGS)     \n";
-    cout << "====================================================================\n";
-
-    // Step 0: Initial Plaintext Matrix
-    string initialPlaintext[2][2] = {
-        {"CSE",  "21"},
-        {"KUET", "Khulna"}
-    };
-
-    printMatrix(initialPlaintext, "Step 0: Initial Plaintext Matrix (2x2)");
-
-    // Step 1: Matrix Transposition
-    // Transpose of matrix[i][j] is transposed[j][i]
-    string transposedMatrix[2][2];
+    // 5. Decryption (Cipher XOR Key)
+    string decTransposed[2][2];
     for (int r = 0; r < 2; r++)
     {
         for (int c = 0; c < 2; c++)
         {
-            transposedMatrix[c][r] = initialPlaintext[r][c];
+            vector<string> decBin;
+            for (size_t k = 0; k < cipherBin[r][c].size(); k++)
+                decBin.push_back(xorBits(cipherBin[r][c][k], keyBin[r][c][k]));
+            decTransposed[r][c] = toString(decBin);
         }
     }
 
-    printMatrix(transposedMatrix, "Step 1: Transposed Matrix (2x2)");
-
-    // Step 2: String-to-Binary Conversion
-    // Convert every character of transposed matrix strings into 8-bit ASCII binary representation
-    vector<string> transposedBinary[2][2];
+    // 6. Inverse Transpose
+    string recovered[2][2];
     for (int r = 0; r < 2; r++)
-    {
         for (int c = 0; c < 2; c++)
-        {
-            transposedBinary[r][c] = stringToBinaryVector(transposedMatrix[r][c]);
-        }
-    }
+            recovered[c][r] = decTransposed[r][c];
 
-    printBinaryMatrix(transposedBinary, "Step 2: Binary Representation of Transposed Matrix (8-bit ASCII)");
-
-    // Step 3: Random Key Generation
-    // Key matrix with same dimensions (2x2) and matching string lengths from {0-9, A-Z, a-z}
-    mt19937 rng(static_cast<unsigned int>(time(nullptr)));
-    string keyMatrix[2][2];
-    vector<string> keyBinary[2][2];
-
-    for (int r = 0; r < 2; r++)
-    {
-        for (int c = 0; c < 2; c++)
-        {
-            size_t len = transposedMatrix[r][c].length();
-            keyMatrix[r][c] = generateRandomKeyString(len, rng);
-            keyBinary[r][c] = stringToBinaryVector(keyMatrix[r][c]);
-        }
-    }
-
-    printMatrix(keyMatrix, "Step 3: Random Alphanumeric Key Matrix (2x2)");
-    printBinaryMatrix(keyBinary, "Step 3: Binary Representation of Key Matrix (8-bit ASCII)");
-
-    // Step 4: Encryption
-    // Element-by-element XOR between transposed plaintext binary and key binary
-    vector<string> cipherBinary[2][2];
-    for (int r = 0; r < 2; r++)
-    {
-        for (int c = 0; c < 2; c++)
-        {
-            for (size_t k = 0; k < transposedBinary[r][c].size(); k++)
-            {
-                string cBin = xorBinaryStrings(transposedBinary[r][c][k], keyBinary[r][c][k]);
-                cipherBinary[r][c].push_back(cBin);
-            }
-        }
-    }
-
-    printBinaryMatrix(cipherBinary, "Step 4: Ciphertext Matrix (Binary representation after XOR)");
-
-    // Step 5: Decryption
-    // XOR ciphertext binary with key binary to recover transposed plaintext binary
-    vector<string> decryptedTransposedBinary[2][2];
-    string decryptedTransposed[2][2];
-
-    for (int r = 0; r < 2; r++)
-    {
-        for (int c = 0; c < 2; c++)
-        {
-            for (size_t k = 0; k < cipherBinary[r][c].size(); k++)
-            {
-                string pBin = xorBinaryStrings(cipherBinary[r][c][k], keyBinary[r][c][k]);
-                decryptedTransposedBinary[r][c].push_back(pBin);
-            }
-            decryptedTransposed[r][c] = binaryVectorToString(decryptedTransposedBinary[r][c]);
-        }
-    }
-
-    printBinaryMatrix(decryptedTransposedBinary, "Step 5: Decrypted Transposed Binary Matrix (Cipher XOR Key)");
-    printMatrix(decryptedTransposed, "Step 5: Decrypted Transposed String Matrix");
-
-    // Step 6: Inverse Transpose to Recover Original Plaintext Matrix
-    string recoveredPlaintext[2][2];
-    for (int r = 0; r < 2; r++)
-    {
-        for (int c = 0; c < 2; c++)
-        {
-            recoveredPlaintext[c][r] = decryptedTransposed[r][c];
-        }
-    }
-
-    printMatrix(recoveredPlaintext, "Step 6: Recovered Original Plaintext Matrix (Inverse Transpose)");
-
-    // Step 7: Verification
-    bool isMatch = true;
-    for (int r = 0; r < 2; r++)
-    {
-        for (int c = 0; c < 2; c++)
-        {
-            if (recoveredPlaintext[r][c] != initialPlaintext[r][c])
-            {
-                isMatch = false;
-            }
-        }
-    }
-
-    cout << "\n====================================================================\n";
-    if (isMatch)
-    {
-        cout << " [SUCCESS] Decryption and inverse transpose successfully recovered\n";
-        cout << "           the original 2x2 plaintext matrix!\n";
-    }
-    else
-    {
-        cout << " [ERROR] Decrypted matrix does NOT match the original plaintext matrix.\n";
-    }
-    cout << "====================================================================\n";
+    cout << "\nDecrypted Matrix:\n";
+    printMatrix(recovered);
 
     return 0;
 }
