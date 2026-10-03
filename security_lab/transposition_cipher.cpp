@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <random>
+#include <cstdlib>
 #include <ctime>
 
 using namespace std;
@@ -61,16 +61,6 @@ string xorBits(const string &a, const string &b)
     return res;
 }
 
-// Generate random alphanumeric key of given length
-string generateKey(size_t len, mt19937 &rng)
-{
-    uniform_int_distribution<size_t> dist(0, CHARSET.size() - 1);
-    string key = "";
-    for (size_t i = 0; i < len; i++)
-        key += CHARSET[dist(rng)];
-    return key;
-}
-
 // Print 2x2 string matrix
 void printMatrix(const string m[2][2])
 {
@@ -84,7 +74,7 @@ void printMatrix(const string m[2][2])
 
 int main()
 {
-    mt19937 rng(time(nullptr));
+    srand(time(0));
 
     // 0. Initial Matrix
     string pt[2][2] = {
@@ -109,14 +99,17 @@ int main()
         for (int c = 0; c < 2; c++)
             ptBin[r][c] = toBinary(transposed[r][c]);
 
-    // 3. Random Key Generation
+    // 3. Simple Random Key Generation
     string key[2][2];
     vector<string> keyBin[2][2];
     for (int r = 0; r < 2; r++)
     {
         for (int c = 0; c < 2; c++)
         {
-            key[r][c] = generateKey(transposed[r][c].length(), rng);
+            key[r][c] = "";
+            for (size_t i = 0; i < transposed[r][c].length(); i++)
+                key[r][c] += CHARSET[rand() % CHARSET.length()];
+
             keyBin[r][c] = toBinary(key[r][c]);
         }
     }
