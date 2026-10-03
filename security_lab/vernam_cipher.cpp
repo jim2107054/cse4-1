@@ -4,183 +4,88 @@
 
 using namespace std;
 
-
-// ======================================================
-// CUSTOM MOD
-// Handles both positive and negative values
-// ======================================================
-long long mymod(long long a, long long b)
+// Custom mod to handle negative numbers
+int mymod(int a, int b)
 {
-    long long r = a - (a / b) * b;
-
-    if (r < 0)
-        r = r + b;
-
-    return r;
+    int r = a % b;
+    return (r < 0) ? r + b : r;
 }
 
-
-// ======================================================
-// ALPHABET ARRAY
-// ======================================================
-const char ALPHABET[26] = {
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-    'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-    'u', 'v', 'w', 'x', 'y', 'z'
-};
-
-
-// Helper to find index of a character in alphabet array
-int getIndex(char ch)
+// Vernam Encryption: C[i] = (P[i] + K[i]) mod 26
+string encrypt(const string &text, const string &key)
 {
-    ch = tolower(ch);
-    for (int i = 0; i < 26; i++)
+    string cipher = "";
+    for (size_t i = 0; i < text.length(); i++)
     {
-        if (ALPHABET[i] == ch)
-            return i;
-    }
-    return -1;
-}
+        char p = text[i];
+        char k = key[i];
 
-
-// ======================================================
-// VERNAM ENCRYPTION
-// C[i] = (P[i] + K[i]) mod 26
-// ======================================================
-string encrypt(string plaintext, string key)
-{
-    string ciphertext = "";
-
-    for (int i = 0; i < (int)plaintext.length(); i++)
-    {
-        char pChar = plaintext[i];
-        char kChar = key[i];
-
-        if (isalpha(pChar) && isalpha(kChar))
+        if (isalpha(p) && isalpha(k))
         {
-            bool isUpper = isupper(pChar);
-
-            int pIndex = getIndex(pChar);
-            int kIndex = getIndex(kChar);
-
-            // Add indices modulo 26 using alphabet array
-            int cIndex = mymod(pIndex + kIndex, 26);
-            char encChar = ALPHABET[cIndex];
-
-            if (isUpper)
-                encChar = toupper(encChar);
-
-            ciphertext += encChar;
+            char baseP = isupper(p) ? 'A' : 'a';
+            char baseK = isupper(k) ? 'A' : 'a';
+            int pVal = p - baseP;
+            int kVal = k - baseK;
+            cipher += static_cast<char>(baseP + mymod(pVal + kVal, 26));
         }
         else
         {
-            // Non-alphabet characters are preserved
-            ciphertext += pChar;
+            cipher += p;
         }
     }
-
-    return ciphertext;
+    return cipher;
 }
 
-
-// ======================================================
-// VERNAM DECRYPTION
-// P[i] = (C[i] - K[i]) mod 26
-// ======================================================
-string decrypt(string ciphertext, string key)
+// Vernam Decryption: P[i] = (C[i] - K[i]) mod 26
+string decrypt(const string &cipher, const string &key)
 {
-    string plaintext = "";
-
-    for (int i = 0; i < (int)ciphertext.length(); i++)
+    string text = "";
+    for (size_t i = 0; i < cipher.length(); i++)
     {
-        char cChar = ciphertext[i];
-        char kChar = key[i];
+        char c = cipher[i];
+        char k = key[i];
 
-        if (isalpha(cChar) && isalpha(kChar))
+        if (isalpha(c) && isalpha(k))
         {
-            bool isUpper = isupper(cChar);
-
-            int cIndex = getIndex(cChar);
-            int kIndex = getIndex(kChar);
-
-            // Subtract indices modulo 26 using alphabet array
-            int pIndex = mymod(cIndex - kIndex, 26);
-            char decChar = ALPHABET[pIndex];
-
-            if (isUpper)
-                decChar = toupper(decChar);
-
-            plaintext += decChar;
+            char baseC = isupper(c) ? 'A' : 'a';
+            char baseK = isupper(k) ? 'A' : 'a';
+            int cVal = c - baseC;
+            int kVal = k - baseK;
+            text += static_cast<char>(baseC + mymod(cVal - kVal, 26));
         }
         else
         {
-            // Non-alphabet characters are preserved
-            plaintext += cChar;
+            text += c;
         }
     }
-
-    return plaintext;
+    return text;
 }
 
-
-// ======================================================
-// MAIN
-// ======================================================
 int main()
 {
     string text, key;
 
-    // ================================================
-    // INPUT
-    // ================================================
-    cout << "Enter plaintext message: ";
+    cout << "Enter plaintext: ";
     getline(cin, text);
 
-    cout << "Enter key (same length as message or string): ";
+    cout << "Enter key: ";
     getline(cin, key);
 
-    // Auto-pad / repeat key if shorter than plaintext
+    // Pad / repeat key to match text length if needed
     if (key.length() < text.length())
     {
-        string originalKey = key;
+        string origKey = key;
         while (key.length() < text.length())
-        {
-            key += originalKey;
-        }
+            key += origKey;
         key = key.substr(0, text.length());
-        cout << "(Key adjusted to match length: " << key << ")\n";
     }
 
+    string cipher = encrypt(text, key);
+    string decrypted = decrypt(cipher, key);
 
-    // ================================================
-    // ENCRYPTION
-    // ================================================
-    string encryptedText = encrypt(text, key);
-
-
-    // ================================================
-    // DECRYPTION
-    // ================================================
-    string decryptedText = decrypt(encryptedText, key);
-
-
-    // ================================================
-    // DISPLAY RESULTS
-    // ================================================
-    cout << "\n========== VERNAM CIPHER ==========\n";
-    cout << "Plaintext          : " << text << endl;
-    cout << "Key                : " << key << endl;
-    cout << "Ciphertext         : " << encryptedText << endl;
-    cout << "Decrypted Plaintext: " << decryptedText << endl;
-
-
-    // ================================================
-    // CHECK
-    // ================================================
-    if (decryptedText == text)
-        cout << "\nSUCCESSFUL\n";
-    else
-        cout << "\nFAILED\n";
+    cout << "\nUsed Key  : " << key << "\n";
+    cout << "Ciphertext: " << cipher << "\n";
+    cout << "Decrypted : " << decrypted << "\n";
 
     return 0;
 }

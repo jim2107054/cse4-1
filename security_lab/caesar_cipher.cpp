@@ -4,166 +4,67 @@
 
 using namespace std;
 
-
-// ======================================================
-// CUSTOM MOD
-// Handles both positive and negative values
-// ======================================================
-long long mymod(long long a, long long b)
+// Custom mod to handle negative numbers
+int mymod(int a, int b)
 {
-    long long r = a - (a / b) * b;
-
-    if (r < 0)
-        r = r + b;
-
-    return r;
+    int r = a % b;
+    return (r < 0) ? r + b : r;
 }
 
-
-// ======================================================
-// ALPHABET ARRAY
-// ======================================================
-const char ALPHABET[26] = {
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-    'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-    'u', 'v', 'w', 'x', 'y', 'z'
-};
-
-
-// Helper to find index of a character in alphabet array
-int getIndex(char ch)
+// Caesar Encryption: C = (P + shift) mod 26
+string encrypt(const string &text, int shift)
 {
-    ch = tolower(ch);
-    for (int i = 0; i < 26; i++)
+    string cipher = "";
+    for (char ch : text)
     {
-        if (ALPHABET[i] == ch)
-            return i;
-    }
-    return -1;
-}
-
-
-// ======================================================
-// CAESAR ENCRYPTION
-// C = (P + shift) mod 26
-// ======================================================
-string encrypt(string plaintext, int shift)
-{
-    string ciphertext = "";
-
-    for (int i = 0; i < (int)plaintext.length(); i++)
-    {
-        char ch = plaintext[i];
-
         if (isalpha(ch))
         {
-            bool isUpper = isupper(ch);
-            int pIndex = getIndex(ch);
-
-            // Shift using alphabet array
-            int cIndex = mymod(pIndex + shift, 26);
-            char encChar = ALPHABET[cIndex];
-
-            if (isUpper)
-                encChar = toupper(encChar);
-
-            ciphertext += encChar;
+            char base = isupper(ch) ? 'A' : 'a';
+            cipher += static_cast<char>(base + mymod((ch - base) + shift, 26));
         }
         else
         {
-            // Keep non-alphabet characters as they are
-            ciphertext += ch;
+            cipher += ch;
         }
     }
-
-    return ciphertext;
+    return cipher;
 }
 
-
-// ======================================================
-// CAESAR DECRYPTION
-// P = (C - shift) mod 26
-// ======================================================
-string decrypt(string ciphertext, int shift)
+// Caesar Decryption: P = (C - shift) mod 26
+string decrypt(const string &cipher, int shift)
 {
-    string plaintext = "";
-
-    for (int i = 0; i < (int)ciphertext.length(); i++)
+    string text = "";
+    for (char ch : cipher)
     {
-        char ch = ciphertext[i];
-
         if (isalpha(ch))
         {
-            bool isUpper = isupper(ch);
-            int cIndex = getIndex(ch);
-
-            // Reverse shift using alphabet array
-            int pIndex = mymod(cIndex - shift, 26);
-            char decChar = ALPHABET[pIndex];
-
-            if (isUpper)
-                decChar = toupper(decChar);
-
-            plaintext += decChar;
+            char base = isupper(ch) ? 'A' : 'a';
+            text += static_cast<char>(base + mymod((ch - base) - shift, 26));
         }
         else
         {
-            // Keep non-alphabet characters as they are
-            plaintext += ch;
+            text += ch;
         }
     }
-
-    return plaintext;
+    return text;
 }
 
-
-// ======================================================
-// MAIN
-// ======================================================
 int main()
 {
     string text;
     int shift;
 
-    // ================================================
-    // INPUT
-    // ================================================
-    cout << "Enter plaintext message: ";
+    cout << "Enter plaintext: ";
     getline(cin, text);
 
-    cout << "Enter shift key (e.g. 3): ";
+    cout << "Enter shift: ";
     cin >> shift;
 
+    string cipher = encrypt(text, shift);
+    string decrypted = decrypt(cipher, shift);
 
-    // ================================================
-    // ENCRYPTION
-    // ================================================
-    string encryptedText = encrypt(text, shift);
-
-
-    // ================================================
-    // DECRYPTION
-    // ================================================
-    string decryptedText = decrypt(encryptedText, shift);
-
-
-    // ================================================
-    // DISPLAY RESULTS
-    // ================================================
-    cout << "\n========== CAESAR CIPHER ==========\n";
-    cout << "Original Plaintext : " << text << endl;
-    cout << "Shift Key          : " << shift << endl;
-    cout << "Ciphertext         : " << encryptedText << endl;
-    cout << "Decrypted Plaintext: " << decryptedText << endl;
-
-
-    // ================================================
-    // CHECK
-    // ================================================
-    if (decryptedText == text)
-        cout << "\nSUCCESSFUL\n";
-    else
-        cout << "\nFAILED\n";
+    cout << "\nCiphertext: " << cipher << "\n";
+    cout << "Decrypted : " << decrypted << "\n";
 
     return 0;
 }
