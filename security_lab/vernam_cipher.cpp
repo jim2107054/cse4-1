@@ -11,7 +11,7 @@ string encrypt(const string &text, const string &key)
         char p = text[i];
         char k = key[i];
 
-        // Key value (Letter হলে 0-25, Digit হলে 0-9)
+        // Key value (0-25 for letters, 0-9 for digits)
         int kVal = 0;
         bool validKey = true;
 
@@ -53,7 +53,7 @@ string decrypt(const string &cipher, const string &key)
         char c = cipher[i];
         char k = key[i];
 
-        // Key value (Letter হলে 0-25, Digit হলে 0-9)
+        // Key value (0-25 for letters, 0-9 for digits)
         int kVal = 0;
         bool validKey = true;
 
