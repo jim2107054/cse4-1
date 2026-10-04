@@ -1,15 +1,6 @@
-#include <iostream>
-#include <string>
-#include <cctype>
+#include <bits/stdc++.h>
 
 using namespace std;
-
-// Custom mod to handle negative numbers
-int mymod(int a, int b)
-{
-    int r = a % b;
-    return (r < 0) ? r + b : r;
-}
 
 // Vernam Encryption: C[i] = (P[i] + K[i]) mod 26
 string encrypt(const string &text, const string &key)
@@ -20,13 +11,30 @@ string encrypt(const string &text, const string &key)
         char p = text[i];
         char k = key[i];
 
-        if (isalpha(p) && isalpha(k))
+        // Key value (Letter হলে 0-25, Digit হলে 0-9)
+        int kVal = 0;
+        bool validKey = true;
+
+        if (k >= 'A' && k <= 'Z')
+            kVal = k - 'A';
+        else if (k >= 'a' && k <= 'z')
+            kVal = k - 'a';
+        else if (k >= '0' && k <= '9')
+            kVal = k - '0';
+        else
+            validKey = false;
+
+        // Plaintext uppercase
+        if (p >= 'A' && p <= 'Z' && validKey)
         {
-            char baseP = isupper(p) ? 'A' : 'a';
-            char baseK = isupper(k) ? 'A' : 'a';
-            int pVal = p - baseP;
-            int kVal = k - baseK;
-            cipher += static_cast<char>(baseP + mymod(pVal + kVal, 26));
+            int pVal = p - 'A';
+            cipher += (pVal + kVal) % 26 + 'A';
+        }
+        // Plaintext lowercase
+        else if (p >= 'a' && p <= 'z' && validKey)
+        {
+            int pVal = p - 'a';
+            cipher += (pVal + kVal) % 26 + 'a';
         }
         else
         {
@@ -45,13 +53,30 @@ string decrypt(const string &cipher, const string &key)
         char c = cipher[i];
         char k = key[i];
 
-        if (isalpha(c) && isalpha(k))
+        // Key value (Letter হলে 0-25, Digit হলে 0-9)
+        int kVal = 0;
+        bool validKey = true;
+
+        if (k >= 'A' && k <= 'Z')
+            kVal = k - 'A';
+        else if (k >= 'a' && k <= 'z')
+            kVal = k - 'a';
+        else if (k >= '0' && k <= '9')
+            kVal = k - '0';
+        else
+            validKey = false;
+
+        // Ciphertext uppercase
+        if (c >= 'A' && c <= 'Z' && validKey)
         {
-            char baseC = isupper(c) ? 'A' : 'a';
-            char baseK = isupper(k) ? 'A' : 'a';
-            int cVal = c - baseC;
-            int kVal = k - baseK;
-            text += static_cast<char>(baseC + mymod(cVal - kVal, 26));
+            int cVal = c - 'A';
+            text += (cVal - kVal + 26) % 26 + 'A';
+        }
+        // Ciphertext lowercase
+        else if (c >= 'a' && c <= 'z' && validKey)
+        {
+            int cVal = c - 'a';
+            text += (cVal - kVal + 26) % 26 + 'a';
         }
         else
         {

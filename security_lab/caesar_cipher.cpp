@@ -1,26 +1,22 @@
-#include <iostream>
-#include <string>
-#include <cctype>
+#include <bits/stdc++.h>
 
 using namespace std;
-
-// Custom mod to handle negative numbers
-int mymod(int a, int b)
-{
-    int r = a % b;
-    return (r < 0) ? r + b : r;
-}
 
 // Caesar Encryption: C = (P + shift) mod 26
 string encrypt(const string &text, int shift)
 {
     string cipher = "";
+    shift = (shift % 26 + 26) % 26;
+
     for (char ch : text)
     {
-        if (isalpha(ch))
+        if (ch >= 'A' && ch <= 'Z')
         {
-            char base = isupper(ch) ? 'A' : 'a';
-            cipher += static_cast<char>(base + mymod((ch - base) + shift, 26));
+            cipher += (ch - 'A' + shift) % 26 + 'A';
+        }
+        else if (ch >= 'a' && ch <= 'z')
+        {
+            cipher += (ch - 'a' + shift) % 26 + 'a';
         }
         else
         {
@@ -34,12 +30,17 @@ string encrypt(const string &text, int shift)
 string decrypt(const string &cipher, int shift)
 {
     string text = "";
+    shift = (shift % 26 + 26) % 26;
+
     for (char ch : cipher)
     {
-        if (isalpha(ch))
+        if (ch >= 'A' && ch <= 'Z')
         {
-            char base = isupper(ch) ? 'A' : 'a';
-            text += static_cast<char>(base + mymod((ch - base) - shift, 26));
+            text += (ch - 'A' - shift + 26) % 26 + 'A';
+        }
+        else if (ch >= 'a' && ch <= 'z')
+        {
+            text += (ch - 'a' - shift + 26) % 26 + 'a';
         }
         else
         {
