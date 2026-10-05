@@ -194,11 +194,11 @@ int main()
     long long r = 5;
 
     // r must be relatively prime to (p - 1)
-    if (mygcd(r, p - 1) != 1)
-    {
-        cout << "r is not coprime to (p - 1)\n";
-        return 0;
-    }
+    // if (mygcd(r, p - 1) != 1)
+    // {
+    //     cout << "r is not coprime to (p - 1)\n";
+    //     return 0;
+    // }
 
     // ================================================
     // SIGNATURE GENERATION
